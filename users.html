@@ -1,3 +1,38 @@
+<?php
+
+// php populate html table from mysql database
+
+$hostname = "ec2-54-225-242-74.compute-1.amazonaws.com";
+$username = "jyedxvoftlhgmj";
+$password = "c17411e1e14267852fd75e5a4875426441a1f8cea6b6adf93b67d7c87eaa0f06";
+$databaseName = "d72o0k2k6eqitb";
+
+// connect to mysql
+$connect = mysqli_connect($hostname, $username, $password, $databaseName);
+
+// mysql select query
+
+$query = "SELECT * FROM `users";
+
+
+// result for method one
+$result1 = mysqli_query($connect, $query);
+
+// result for method two
+$result2 = mysqli_query($connect, $query);
+
+$dataRow = "";
+
+while($row2 = mysqli_fetch_array($result2))
+{
+   $dataRow = $dataRow."<tr><td>$row2[0]</td><td>$row2[1]</td><td>$row2[2]</td><td>$row2[3]</td></tr>";
+}
+
+?>
+
+
+
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
@@ -7,7 +42,7 @@
     <title>Pairing Dashboard - Home</title>
 
     <!-- Bootstrap -->
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap.css">
     <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.4.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="css/styles.css">
     <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
@@ -34,10 +69,10 @@
           <!-- Collect the nav links, forms, and other content for toggling -->
           <div class="collapse navbar-collapse" id="navbar">
             <ul class="nav navbar-nav">
-              <li class="active"><a href="index.html">Home</a></li>
-              <li><a href="#">Users</a></li>
-              <li><a href="#">Pairing</a></li>
-              <li><a href="#">Settings</a></li>
+              <li><a href="index.html">Home</a></li>
+              <li class="active"><a href="users.html">Users</a></li>
+              <li><a href="pairing.html">Pairing</a></li>
+              <li><a href="settings.html">Settings</a></li>
 
             </ul>
             <ul class="nav navbar-nav navbar-right">
@@ -49,6 +84,23 @@
       </nav>
 
     <!-- Main Body of Text and Informatiom -->
+    <div class="container-fluid" id="core">
+      <div class="row">
+        <div class="col-md-offset-2 col-md-8">
+          <table class="table table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>Friends</th>
+                <th>Warriors</th>
+              </tr>
+            </thead>
+            <tr>
+              <td>asdasd</td>
+            </tr>
+          </table>
+        </div>
+      </div>
+    </div>
 
     </div>
     <!--FOOTER-->
