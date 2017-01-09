@@ -15,8 +15,8 @@ This comes to the database itself, in that in it's present state I would call it
 
 ##### The Database TODO
 - [x] Establish the main tables
-- [ ] Create indexes to improve searching speed
-- [ ] Test with false data
+- [x] Create indexes to improve searching speed
+- [x] Test with false data
 - [ ] Increase modular abilities by adding a value to the reference table to describe type of value expected
 
 ## The Dashboard (Web Application)
