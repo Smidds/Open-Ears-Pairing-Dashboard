@@ -1,37 +1,31 @@
 <?php
 
+ini_set('display_errors', 'On');
+ini_set('display_startup_errors', 'On');
+error_reporting(E_ALL);
+
 // php populate html table from mysql database
 
-$hostname = "ec2-54-225-242-74.compute-1.amazonaws.com";
-$username = "jyedxvoftlhgmj";
-$password = "c17411e1e14267852fd75e5a4875426441a1f8cea6b6adf93b67d7c87eaa0f06";
-$databaseName = "d72o0k2k6eqitb";
+$hostname = "localhost";
+$username = "root";
+$password = "openears";
+$databaseName = "openears_official";
 
 // connect to mysql
-$connect = mysqli_connect($hostname, $username, $password, $databaseName);
+$mysqli = new mysqli($hostname, $username, $password, $databaseName);
 
-// mysql select query
-
-$query = "SELECT * FROM `users";
-
-
-// result for method one
-$result1 = mysqli_query($connect, $query);
-
-// result for method two
-$result2 = mysqli_query($connect, $query);
-
-$dataRow = "";
-
-while($row2 = mysqli_fetch_array($result2))
-{
-   $dataRow = $dataRow."<tr><td>$row2[0]</td><td>$row2[1]</td><td>$row2[2]</td><td>$row2[3]</td></tr>";
+if (!$all = $mysqli->query("SELECT * FROM person")) {
+    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
 }
 
+if (!$friends = $mysqli->query("SELECT SID, FName, LName FROM person WHERE Is_Friend=true")) {
+    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+}
+
+if (!$warriors = $mysqli->query("SELECT SID, FName, LName FROM person WHERE Is_Warrior=true")) {
+    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+}
 ?>
-
-
-
 
 <!DOCTYPE html>
 <html lang="en">
@@ -86,20 +80,71 @@ while($row2 = mysqli_fetch_array($result2))
     <!-- Main Body of Text and Informatiom -->
     <div class="container-fluid" id="core">
       <div class="row">
-        <div class="col-md-offset-2 col-md-8">
+        <div class="col-md-12">
+          <h2>All Users</h2>
           <table class="table table-hover table-bordered">
             <thead>
               <tr>
-                <th>Friends</th>
-                <th>Warriors</th>
+                <th>Student ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
               </tr>
             </thead>
-            <tr>
-              <td>asdasd</td>
-            </tr>
+            <?php
+              while ($row = mysqli_fetch_array($all)){
+                echo "<tr>";
+                echo "<td>" . $row["SID"] . "</td>";
+                echo "<td>" . $row["FName"] . "</td>";
+                echo "<td>" . $row["LName"] . "</td>";
+                echo "</td>";
+              }
+            ?>
           </table>
         </div>
       </div>
+      <div class="row">
+        <div class="col-md-6">
+          <h2>Friends</h2>
+          <table class="table table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+              </tr>
+            </thead>
+            <?php
+              while ($row = mysqli_fetch_array($friends)){
+                echo "<tr>";
+                echo "<td>" . $row["SID"] . "</td>";
+                echo "<td>" . $row["FName"] . "</td>";
+                echo "<td>" . $row["LName"] . "</td>";
+                echo "</td>";
+              }
+            ?>
+          </table>
+        </div>
+        <div class="col-md-6">
+          <h2>Warriors</h2>
+          <table class="table table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>First Name</th>
+                <th>Last Name</th>
+              </tr>
+            </thead>
+            <?php
+              while ($row = mysqli_fetch_array($warriors)){
+                echo "<tr>";
+                echo "<td>" . $row["SID"] . "</td>";
+                echo "<td>" . $row["FName"] . "</td>";
+                echo "<td>" . $row["LName"] . "</td>";
+                echo "</td>";
+              }
+            ?>
+          </table>
+        </div>
     </div>
 
     </div>
