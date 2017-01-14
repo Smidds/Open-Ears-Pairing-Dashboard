@@ -36,6 +36,7 @@ So far the overall thought of the desire has been to keep it minimal and to imit
 - [ ] Settings Page
 
 #### Users Page DEMO
+[[(https://github.com/Smidds/Open-Ears-Pairing-Dashboard/assets/usersPage.gif)|alt=UsersDemo]]
 
 ## The Form
 This one is pretty simple, I'm just thinking that the creation of a form for applying as a Friend or Warrior will be necessary in order to send information to the database.
