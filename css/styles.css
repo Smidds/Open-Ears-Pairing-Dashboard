@@ -7,3 +7,21 @@ body{
 .table{
   background: #fff;
 }
+.hiddenRow {
+  padding: 0 !important;
+
+}
+#getUser{
+  width:150px;
+}
+#getUserBtn{
+  width:92px;
+}
+#editUser{
+  width:35px;
+}
+#hiddenWrapper{
+  font-size: 1.2em;
+  padding: 25px;
+  background-color: #f2f2f2;
+}

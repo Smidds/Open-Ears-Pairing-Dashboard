@@ -14,17 +14,25 @@ $databaseName = "openears_official";
 // connect to mysql
 $mysqli = new mysqli($hostname, $username, $password, $databaseName);
 
-if (!$all = $mysqli->query("SELECT * FROM person")) {
+if (!$friends = $mysqli->query("SELECT * FROM person WHERE Is_Friend=true")) {
     echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
 }
 
-if (!$friends = $mysqli->query("SELECT SID, FName, LName FROM person WHERE Is_Friend=true")) {
+if (!$warriors = $mysqli->query("SELECT * FROM person WHERE Is_Warrior=true")) {
     echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
 }
 
-if (!$warriors = $mysqli->query("SELECT SID, FName, LName FROM person WHERE Is_Warrior=true")) {
+if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
     echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
 }
+
+/* -- This is a good usage of the "allInfo" array!
+
+foreach($rows as $row) {
+  echo $row['CountryCode'];
+}
+*/
+
 ?>
 
 <!DOCTYPE html>
@@ -80,67 +88,192 @@ if (!$warriors = $mysqli->query("SELECT SID, FName, LName FROM person WHERE Is_W
     <!-- Main Body of Text and Informatiom -->
     <div class="container-fluid" id="core">
       <div class="row">
-        <div class="col-md-12">
-          <h2>All Users</h2>
-          <table class="table table-hover table-bordered">
-            <thead>
-              <tr>
-                <th>Student ID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
-              </tr>
-            </thead>
-            <?php
-              while ($row = mysqli_fetch_array($all)){
-                echo "<tr>";
-                echo "<td>" . $row["SID"] . "</td>";
-                echo "<td>" . $row["FName"] . "</td>";
-                echo "<td>" . $row["LName"] . "</td>";
-                echo "</td>";
-              }
-            ?>
-          </table>
-        </div>
-      </div>
-      <div class="row">
-        <div class="col-md-6">
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-1 col-md-5">
           <h2>Friends</h2>
           <table class="table table-hover table-bordered">
             <thead>
               <tr>
                 <th>Student ID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
+                <th>Student Name</th>
+                <th>Action</th>
               </tr>
             </thead>
             <?php
-              while ($row = mysqli_fetch_array($friends)){
+              $x =0;
+              while ($row1 = mysqli_fetch_array($friends)){
+                // Here are all the queries neccessary to print
+                // The SID here is to be used as a reference
+                $sid = $row1["SID"];
+                if (!$info = $mysqli->query("SELECT * FROM person_info as p INNER JOIN info_reference as i ON p.Info_ID = i.Info_ID AND p.SID=\"" . $sid . "\"")) {
+                    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+                }
+                // This is the training list in the table
+                if (!$training = $mysqli->query("SELECT * FROM training_record WHERE SID=\"" . $sid . "\"")) {
+                    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+                }
+
+
                 echo "<tr>";
-                echo "<td>" . $row["SID"] . "</td>";
-                echo "<td>" . $row["FName"] . "</td>";
-                echo "<td>" . $row["LName"] . "</td>";
-                echo "</td>";
+                echo "<td>" . $row1["SID"] . "</td>";
+                echo "<td>" . $row1["FName"] . " " . $row1["LName"] . "</td>";
+                echo "<td id=\"getUser\"><button data-toggle=\"collapse\" data-target=\".friend" . $x . "\" id=\"getUserBtn\" class=\"btn btn-sm btn-info\"><i class=\"glyphicon glyphicon-eye-open\"></i> View</button>
+                                          <button data-toggle=\"\" data-target=\".friendEdit" . $x . "\" id=\"editUser\" class=\"btn btn-sm btn-success\"><i class=\"glyphicon glyphicon-pencil\"></i></button></td>";
+                echo "</tr>";
+
+
+                echo "<tr>";
+                  echo "<td colspan=\"3\" class=\"hiddenRow\">";
+                    echo "<div id=\"hiddenContent\" class=\"collapse friend" . $x . "\">
+                            <div id=\"hiddenWrapper\">
+                                <h1>Main Information</h1>
+                                <table class=\"table table-bordered\">
+                                  <thead>
+                                    <tr>
+                                      <th>Question</th>
+                                      <th>Answer</th>
+                                    </tr>
+                                  </thead>
+                                  <tr>"
+                                . "<td>Email:</td>" . "<td>" . $row1["Email"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Cell: " . "<td>" . $row1["Cell"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Major: " . "<td>" . $row1["Major"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Graduation Year: " . "<td>" . $row1["Grad_Year"] . "</td>
+                                  </tr>
+                                </table>"
+                                . (($row1["Is_Friend"] and $row1["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
+
+                          // This is the large data set
+                          echo "<h1>Survey Answers</h1>
+                                <table class=\"table table-bordered\">
+                                  <thead>
+                                    <tr>
+                                      <th>Question</th>
+                                      <th>Answer</th>
+                                    </tr>
+                                  </thead>";
+                                  while ($row2 = mysqli_fetch_array($info)){
+                                    echo "<tr>
+                                            <td>" . $row2["Info_Type"] . "</td>
+                                            <td>" . $row2["Info_Value"] . "</td>
+                                          </tr>";
+
+                                  }
+                                echo
+                                "</table>";
+
+                          // This is the training data set
+                          echo "<h1>Training Record</h1>
+                              <table class=\"table table-bordered\">
+                                <thead>
+                                  <tr>
+                                    <th style=\"width:50px;\">Number</th>
+                                    <th>Date</th>
+                                  </tr>
+                                </thead>";
+                                $y = 1;
+                                while ($row3 = mysqli_fetch_array($training)){
+                                  echo "<tr>
+                                          <td style=\"text-align:center;\">" . $y . "
+                                          <td>" . $row3["Training_Date"] . "</td>
+                                        </tr>";
+                                  $y++;
+                                }
+                              echo
+                              "</table>";
+
+                              echo "</div>
+                          </div>
+                      </td>
+                  </tr>";
+                $x++;
+                unset($sid);
               }
+              unset($row1);unset($row2);unset($row3);
             ?>
           </table>
         </div>
-        <div class="col-md-6">
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-0 col-md-5">
           <h2>Warriors</h2>
           <table class="table table-hover table-bordered">
             <thead>
               <tr>
                 <th>Student ID</th>
-                <th>First Name</th>
-                <th>Last Name</th>
+                <th>Student Name</th>
               </tr>
             </thead>
             <?php
-              while ($row = mysqli_fetch_array($warriors)){
+              while ($row1 = mysqli_fetch_array($warriors)){
+                // Here are all the queries neccessary to print
+                // The SID here is to be used as a reference
+                $sid = $row1["SID"];
+                if (!$info = $mysqli->query("SELECT * FROM person_info as p INNER JOIN info_reference as i ON p.Info_ID = i.Info_ID AND p.SID=\"" . $sid . "\"")) {
+                    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+                }
+
                 echo "<tr>";
-                echo "<td>" . $row["SID"] . "</td>";
-                echo "<td>" . $row["FName"] . "</td>";
-                echo "<td>" . $row["LName"] . "</td>";
-                echo "</td>";
+                echo "<td>" . $row1["SID"] . "</td>";
+                echo "<td>" . $row1["FName"] . " " . $row1["LName"] . "</td>";
+                echo "<td id=\"getUser\"><button data-toggle=\"collapse\" data-target=\".friend" . $x . "\" id=\"getUserBtn\" class=\"btn btn-sm btn-info\"><i class=\"glyphicon glyphicon-eye-open\"></i> View</button>
+                                          <button data-toggle=\"\" data-target=\".friendEdit" . $x . "\" id=\"editUser\" class=\"btn btn-sm btn-success\"><i class=\"glyphicon glyphicon-pencil\"></i></button></td>";
+                echo "</tr>";
+
+
+                echo "<tr>";
+                  echo "<td colspan=\"3\" class=\"hiddenRow\">";
+                    echo "<div id=\"hiddenContent\" class=\"collapse friend" . $x . "\">
+                            <div id=\"hiddenWrapper\">
+                                <h1>Main Information</h1>
+                                <table class=\"table table-bordered\">
+                                  <thead>
+                                    <tr>
+                                      <th>Question</th>
+                                      <th>Answer</th>
+                                    </tr>
+                                  </thead>
+                                  <tr>"
+                                . "<td>Email:</td>" . "<td>" . $row1["Email"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Cell: " . "<td>" . $row1["Cell"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Major: " . "<td>" . $row1["Major"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Graduation Year: " . "<td>" . $row1["Grad_Year"] . "</td>
+                                  </tr>
+                                </table>"
+                                . (($row1["Is_Friend"] and $row1["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
+
+                          // This is the large data set
+                          echo "<h1>Survey Answers</h1>
+                                <table class=\"table table-bordered\">
+                                  <thead>
+                                    <tr>
+                                      <th>Question</th>
+                                      <th>Answer</th>
+                                    </tr>
+                                  </thead>";
+                                  while ($row2 = mysqli_fetch_array($info)){
+                                    echo "<tr>
+                                            <td>" . $row2["Info_Type"] . "</td>
+                                            <td>" . $row2["Info_Value"] . "</td>
+                                          </tr>";
+
+                                  }
+                                echo
+                                "</table>
+                          </div>";
+                  echo "</td>";
+                echo "</tr>";
+                $x++;
+
               }
             ?>
           </table>
