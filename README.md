@@ -17,7 +17,6 @@ This comes to the database itself, in that in it's present state I would call it
 - [x] Establish the main tables
 - [x] Create indexes to improve searching speed
 - [x] Test with false data
-- [ ] Increase modular abilities by adding a value to the reference table to describe type of value expected
 
 ## The Dashboard (Web Application)
 So far the overall thought of the desire has been to keep it minimal and to imitate other well know interfaces to administrate users and information. Specifically, I'm taking inspiration from places such as CPanel and the things that pop up from a google search of admin panel
@@ -28,6 +27,16 @@ So far the overall thought of the desire has been to keep it minimal and to imit
 - [ ] Integrate database to web application
 - [ ] Manage permissions admins to access the page, perhaps a sign in
 - [ ] Search for some kind of hosting
+
+##### Pages TODO
+- [ ] Home Page
+- [ ] Users Page
+- [ ] Pairing Page
+- [ ] Pairing History Page
+- [ ] Settings Page
+
+#### Users Page DEMO
+![alt tag](https://github.com/Smidds/Open-Ears-Pairing-Dashboard/assets/usersPage.gif)
 
 ## The Form
 This one is pretty simple, I'm just thinking that the creation of a form for applying as a Friend or Warrior will be necessary in order to send information to the database.
