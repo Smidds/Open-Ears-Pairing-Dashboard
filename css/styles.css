@@ -1,27 +1,80 @@
-body{
-  background-color: #eaeaea;
+.table{background: #fff;}
+.hiddenRow {padding: 0 !important;}
+.boxes {
+  /*display: -webkit-box;
+  display:    -moz-box;
+  display:         box;*/
+  display: flex;
+  padding: 0;
 }
-#core{
-  bacgrkound: #fff;
-}
-.table{
-  background: #fff;
-}
-.hiddenRow {
-  padding: 0 !important;
 
+.box {
+  /*-webkit-box-flex: 1;
+     -moz-box-flex: 1;
+          box-flex: 1;
+  flex-grow: 5;
+  list-style: none; */
+  line-height: 3em;
+  border: 2px solid;
+  border-radius: 5px;
+  background-color: white;
+  text-align: center;
+  flex: 1 1 auto;
+  width: 100px;
+  height: 50px;
+  transition: width 0.7s ease-out;
+ }
+
+.fix {
+  /*-webkit-box-flex: 0;
+     -moz-box-flex: 0;
+          box-flex: 0;
+  flex-grow: 1;*/
+  text-align: center;
+  margin-left: 5px;
+  margin-right: 5px;
+  line-height: 3em;
+  vertical-align: middle;
+  text-align: center;
 }
-#getUser{
-  width:150px;
-}
-#getUserBtn{
-  width:92px;
-}
-#editUser{
-  width:35px;
-}
+
+body{background-color: #eaeaea;}
+
+
+#core{bacgrkound: #fff;}
+
+#getUser{width:150px;}
+
+#getUserBtn{width:92px;}
+
+#editUser{width:35px;}
+
 #hiddenWrapper{
   font-size: 1.2em;
   padding: 25px;
   background-color: #f2f2f2;
+}
+#dividerHeader{
+  font-size: 2em;
+  margin-top: 0.67em;
+  margin-bottom: 0.67em;
+  margin-left: 0;
+  margin-right: 0;
+}
+#trainingStatus{
+  font-size: 0.9em;
+  position:relative;
+  top:-4px;
+  padding: 5px;
+  border-radius: 5px;
+  border: 1px solid;
+}
+
+#friendInput {
+  width: 100px;
+}
+
+#submitUser{
+  width: 100%;
+  line-height: 2em;
 }

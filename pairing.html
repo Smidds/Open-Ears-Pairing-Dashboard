@@ -1,10 +1,46 @@
+<?php
+
+ini_set('display_errors', 'On');
+ini_set('display_startup_errors', 'On');
+error_reporting(E_ALL);
+
+// php populate html table from mysql database
+
+$hostname = "localhost";
+$username = "root";
+$password = "openears";
+$databaseName = "openears_official";
+
+// connect to mysql
+$mysqli = new mysqli($hostname, $username, $password, $databaseName);
+
+if (!$friends = $mysqli->query("SELECT * FROM person WHERE Is_Friend=true")) {
+    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+}
+
+if (!$warriors = $mysqli->query("SELECT * FROM person WHERE Is_Warrior=true AND Warrior_Is_Paired=false")) {
+    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+}
+
+if (!$allPairs = $mysqli->query("SELECT * FROM pairing_record ORDER BY (CASE WHEN Date_End IS NULL then 1 ELSE 0 END), Date_Start, SID_Friend, SID_Warrior")) {
+    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+}
+
+if (!$oldPairs = $mysqli->query("SELECT * FROM pairing_record WHERE Date_End IS NOT NULL ORDER BY Date_End")) {
+    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+}
+/*
+
+*/
+?>
+
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pairing Dashboard - Home</title>
+    <title>Pairing Dashboard - Pairing</title>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="css/bootstrap.css">
@@ -36,7 +72,8 @@
             <ul class="nav navbar-nav">
               <li><a href="index.html">Home</a></li>
               <li><a href="users.html">Users</a></li>
-              <li class="active"><a href="#">Pairing</a></li>
+              <li class="active"><a href="pairing.html">Pairing</a></li>
+              <li><a href="pairing_records.html">Pairing Records</a></li>
               <li><a href="settings.html">Settings</a></li>
 
             </ul>
@@ -49,7 +86,226 @@
       </nav>
 
     <!-- Main Body of Text and Informatiom -->
+    <!-- Here we have the pair that is being constructed -->
+    <div class="container-fluid" id="core">
+      <div class="row">
+        <div class="col-xs-11 col-sm-offset-1 col-sm-9">
+          <form>
+            <div class="boxes">
+              <div class="box friendInput" id="friendInput"></div>
+              <div class="fix"><i class="glyphicon glyphicon-link"></i></div>
+              <div class="box warriorInput" id="warriorInput"></div>
+            </div>
+          </form>
+        </div>
+        <div class="col-xs-1 col-sm-1">
+          <btn class="btn btn-success" style="margin-top:1px; margin-left: -2px; font-size: 18px;" id="submitPair"><i class="fa fa-check-circle-o"></i></btn>
+        </div>
+      </div>
 
+      <!-- This row consists of the tables with the Friends and Warriors -->
+      <div class="row">
+        <!-- This is the Friends column -->
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-1 col-md-5">
+          <h2>Friends</h2>
+          <table class="table table-hover table-bordered">
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Action</th>
+              </tr>
+            </thead>
+            <?php
+              $x =0;
+              while ($row1 = mysqli_fetch_array($friends)){
+                // Here are all the queries neccessary to print
+                // The SID here is to be used as a reference
+                $sid = $row1["SID"];
+                if (!$info = $mysqli->query("SELECT * FROM person_info as p INNER JOIN info_reference as i ON p.Info_ID = i.Info_ID AND p.SID=\"" . $sid . "\"")) {
+                    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+                }
+                // This is the training list in the table
+                if (!$training = $mysqli->query("SELECT * FROM training_record WHERE SID=\"" . $sid . "\"")) {
+                    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+                }
+
+                // The master Friend counter and decision
+                $row_cnt = mysqli_num_rows($training);
+                if($row_cnt>=2){
+                  echo "<tr>";
+                  echo "<td>" . $sid . "</td>";
+                  echo "<td>" . $row1["FName"] . " " . $row1["LName"] . "</td>";
+                  echo "<td id=\"getUser\"><button data-toggle=\"collapse\" data-target=\".friend" . $x . "\" id=\"getUserBtn\" class=\"btn btn-sm btn-info\"><i class=\"glyphicon glyphicon-eye-open\"></i> View</button>
+                                            <button onclick=\"select('" . $sid . "', 'friendInput')\" id=\"editUser\" class=\"btn btn-sm btn-success\"><i class=\"fa fa-user-plus\"></i></button></td>";
+                  echo "</tr>";
+
+
+                  echo "<tr>";
+                    echo "<td colspan=\"3\" class=\"hiddenRow\">";
+                      echo "<div id=\"hiddenContent\" class=\"collapse friend" . $x . "\">
+                              <div id=\"hiddenWrapper\">
+                                  <h1>Main Information</h1>
+                                  <table class=\"table table-bordered\">
+                                  <colgroup>
+                                     <col span=\"1\" style=\"width: 25%;\">
+                                     <col span=\"1\" style=\"width: 50%;\">
+                                  </colgroup>
+                                    <thead>
+                                      <tr>
+                                        <th>Question</th>
+                                        <th>Answer</th>
+                                      </tr>
+                                    </thead>
+                                    <tr>"
+                                  . "<td>Email:</td>" . "<td>" . $row1["Email"] . "</td>
+                                    </tr>
+                                    <tr>"
+                                  . "<td>Cell: " . "<td>" . $row1["Cell"] . "</td>
+                                    </tr>
+                                    <tr>"
+                                  . "<td>Major: " . "<td>" . $row1["Major"] . "</td>
+                                    </tr>
+                                    <tr>"
+                                  . "<td>Graduation Year: " . "<td>" . $row1["Grad_Year"] . "</td>
+                                    </tr>
+                                  </table>"
+                                  . (($row1["Is_Friend"] and $row1["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
+
+                            // This is the large data set
+                            echo "<h1>Survey Answers</h1>
+                                  <table class=\"table table-bordered\">
+                                  <colgroup>
+                                     <col span=\"1\" style=\"width: 25%;\">
+                                     <col span=\"1\" style=\"width: 50%;\">
+                                  </colgroup>
+                                    <thead>
+                                      <tr>
+                                        <th>Question</th>
+                                        <th>Answer</th>
+                                      </tr>
+                                    </thead>";
+                                    while ($row2 = mysqli_fetch_array($info)){
+                                      echo "<tr>
+                                              <td>" . $row2["Info_Type"] . "</td>
+                                              <td>" . $row2["Info_Value"] . "</td>
+                                            </tr>";
+                                    }
+                            echo  "</table>
+                                </div>
+                            </div>
+                        </td>
+                    </tr>";
+                  $x++;
+                  unset($sid);
+                }
+              }
+              unset($row1);unset($row2);unset($row3);unset($row_cnt);
+            ?>
+          </table>
+        </div>
+
+
+
+        <div class="col-sm-offset-1 col-sm-10 col-md-offset-0 col-md-5">
+          <?php
+            echo "<h2>Warriors</h2>";
+            // This is a check to see if it's worth printing at all
+            unset($row_cnt);
+            $row_cnt = mysqli_num_rows($warriors);
+            if($row_cnt <= 0){
+              echo "<div class=\"bg-success\" style=\"padding: 20px; border-radius: 5px; border: 1px solid; font-size: 2em; text-align: center;\">No unpaired Warriors! Yay!</div>";
+            }
+            else{
+              echo "
+          <table class=\"table table-hover table-bordered\">
+            <thead>
+              <tr>
+                <th>Student ID</th>
+                <th>Student Name</th>
+                <th>Action</th>
+              </tr>
+            </thead>";
+              while ($row1 = mysqli_fetch_array($warriors)){
+                // Here are all the queries neccessary to print
+                // The SID here is to be used as a reference
+
+                $sid = $row1["SID"];
+                if (!$info = $mysqli->query("SELECT * FROM person_info as p INNER JOIN info_reference as i ON p.Info_ID = i.Info_ID AND p.SID=\"" . $sid . "\"")) {
+                    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+                }
+
+                echo "<tr>";
+                echo "<td>" . $row1["SID"] . "</td>";
+                echo "<td>" . $row1["FName"] . " " . $row1["LName"] . "</td>";
+                echo "<td id=\"getUser\"><button data-toggle=\"collapse\" data-target=\".friend" . $x . "\" id=\"getUserBtn\" class=\"btn btn-sm btn-info\"><i class=\"glyphicon glyphicon-eye-open\"></i> View</button>
+                                        <button onclick=\"select('" . $sid . "', 'warriorInput')\" id=\"editUser\" class=\"btn btn-sm btn-success\"><i class=\"fa fa-user-plus\"></i></button></td>";
+                echo "</tr>";
+
+
+                echo "<tr>";
+                  echo "<td colspan=\"3\" class=\"hiddenRow\">";
+                    echo "<div id=\"hiddenContent\" class=\"collapse friend" . $x . "\">
+                            <div id=\"hiddenWrapper\">
+                                <h1>Main Information</h1>
+                                <table class=\"table table-bordered\">
+                                  <colgroup>
+                                     <col span=\"1\" style=\"width: 25%;\">
+                                     <col span=\"1\" style=\"width: 50%;\">
+                                  </colgroup>
+                                  <thead>
+                                    <tr>
+                                      <th>Question</th>
+                                      <th>Answer</th>
+                                    </tr>
+                                  </thead>
+                                  <tr>"
+                                . "<td>Email:</td>" . "<td>" . $row1["Email"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Cell: " . "<td>" . $row1["Cell"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Major: " . "<td>" . $row1["Major"] . "</td>
+                                  </tr>
+                                  <tr>"
+                                . "<td>Graduation Year: " . "<td>" . $row1["Grad_Year"] . "</td>
+                                  </tr>
+                                </table>"
+                                . (($row1["Is_Friend"] and $row1["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
+
+                          // This is the large data set
+                          echo "<h1>Survey Answers</h1>
+                                <table class=\"table table-bordered\">
+                                <colgroup>
+                                   <col span=\"1\" style=\"width: 25%;\">
+                                   <col span=\"1\" style=\"width: 50%;\">
+                                </colgroup>
+                                  <thead>
+                                    <tr>
+                                      <th>Question</th>
+                                      <th>Answer</th>
+                                    </tr>
+                                  </thead>";
+                                  while ($row2 = mysqli_fetch_array($info)){
+                                    echo "<tr>
+                                            <td>" . $row2["Info_Type"] . "</td>
+                                            <td>" . $row2["Info_Value"] . "</td>
+                                          </tr>";
+
+                                  }
+                                echo
+                                "</table>
+                          </div>";
+                  echo "</td>";
+                echo "</tr>";
+                $x++;
+              }
+            }
+            ?>
+          </table>
+        </div>
+      </div>
     </div>
     <!--FOOTER-->
     <!-- jQuery (necessary for Bootstrap's JavaScript plugins) -->

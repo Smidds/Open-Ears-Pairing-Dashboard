@@ -17,21 +17,40 @@ $username = "root";
 $password = "openears";
 $databaseName = "openears_official";
 
-// connect to mysql
-$mysqli = new mysqli($hostname, $username, $password, $databaseName);
-
-if (!$friends = $mysqli->query("SELECT * FROM person WHERE Is_Friend=true")) {
-    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+try {
+  $db = new PDO('mysql:host=' . $hostname . ';dbname=' . $databaseName . '', $username, $password);
+} catch (PDOException $e) {
+    echo 'Connection failed: ' . $e->getMessage();
 }
 
-if (!$warriors = $mysqli->query("SELECT * FROM person WHERE Is_Warrior=true")) {
-    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
-}
+/*
+ // This is the training list in the table
+ if (!$training = $mysqli->query("SELECT * FROM training_record WHERE SID=\"" . $sid . "\"")) {
+     echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+ }
+ */
+$getInfo = $db->prepare('
+  SELECT      *
+  FROM        person_info as p
+  INNER JOIN  info_reference as i
+  ON          p.Info_ID = i.Info_ID AND p.SID = :SID');
 
-if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
-    echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
-}
+$training = $db->prepare('
+ SELECT   *
+ FROM     training_record
+ WHERE    SID = :SID
+ ORDER BY Training_Date DESC');
 
+$allPairs = $db->prepare('
+  SELECT   *
+  FROM     pairing_record
+  ORDER BY Date_End DESC, Date_Start DESC');
+
+$person = $db->prepare('
+  SELECT   *
+  FROM     person
+  WHERE    SID = :SID')
+$allPairs->execute();
 ?>
 
 <!DOCTYPE html>
@@ -40,7 +59,7 @@ if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Pairing Dashboard - Users</title>
+    <title>Pairing Dashboard - Home</title>
 
     <!-- Bootstrap -->
     <link rel="stylesheet" href="css/bootstrap.css">
@@ -71,9 +90,9 @@ if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
           <div class="collapse navbar-collapse" id="navbar">
             <ul class="nav navbar-nav">
               <li><a href="index.html">Home</a></li>
-              <li class="active"><a href="users.html">Users</a></li>
+              <li><a href="users.html">Users</a></li>
               <li><a href="pairing.html">Pairing</a></li>
-              <li><a href="pairing_records.html">Pairing Records</a></li>
+              <li class="active"><a href="pairing_records.html">Pairing Records</a></li>
               <li><a href="settings.html">Settings</a></li>
 
             </ul>
@@ -88,30 +107,28 @@ if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
       <!-- Main Body of Text and Informatiom -->
       <div class="container-fluid" id="core">
         <div class="row">
-          <div class="col-sm-offset-1 col-sm-10 col-md-offset-1 col-md-5">
-            <h2>Friends</h2>
+          <div class="col-sm-offset-1 col-sm-11">
+            <h1>Pairs</h1>
+          </div>
+          <div class="col-sm-offset-1 col-sm-10 col-md-offset-1 col-md-10">
             <table class="table table-hover table-bordered">
               <thead>
                 <tr>
-                  <th>Student ID</th>
-                  <th>Student Name</th>
+                  <th>Friend</th>
+                  <th>Warrior</th>
+                  <th>Date Started</th>
+                  <th>Date Ended</th>
                   <th>Action</th>
                 </tr>
               </thead>
               <?php
                 $x =0;
-                while ($row1 = mysqli_fetch_array($friends)){
+                while ($row1 = $allPairs->fetch(PDO::FETCH_ASSOC)){
                   // Here are all the queries neccessary to print
                   // The SID here is to be used as a reference
-                  $sid = $row1["SID"];
-                  if (!$info = $mysqli->query("SELECT * FROM person_info as p INNER JOIN info_reference as i ON p.Info_ID = i.Info_ID AND p.SID=\"" . $sid . "\"")) {
-                      echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
-                  }
-                  // This is the training list in the table
-                  if (!$training = $mysqli->query("SELECT * FROM training_record WHERE SID=\"" . $sid . "\"")) {
-                      echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
-                  }
-
+                  // You'll need to execute your PDO's with variables sent
+                  $sidF = $row1["SID_Friend"];
+                  $sidW = $row1["SID_Warrior"];
 
                   echo "<tr>";
                   echo "<td>" . $row1["SID"] . "</td>";
@@ -214,96 +231,6 @@ if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
                   unset($sid);
                 }
                 unset($row1);unset($row2);unset($row3);
-              ?>
-            </table>
-          </div>
-          <div class="col-sm-offset-1 col-sm-10 col-md-offset-0 col-md-5">
-            <h2>Warriors</h2>
-            <table class="table table-hover table-bordered">
-              <thead>
-                <tr>
-                  <th>Student ID</th>
-                  <th>Student Name</th>
-                  <th>Action</th>
-                </tr>
-              </thead>
-              <?php
-                while ($row1 = mysqli_fetch_array($warriors)){
-                  // Here are all the queries neccessary to print
-                  // The SID here is to be used as a reference
-                  $sid = $row1["SID"];
-                  if (!$info = $mysqli->query("SELECT * FROM person_info as p INNER JOIN info_reference as i ON p.Info_ID = i.Info_ID AND p.SID=\"" . $sid . "\"")) {
-                      echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
-                  }
-
-                  echo "<tr>";
-                  echo "<td>" . $row1["SID"] . "</td>";
-                  echo "<td>" . $row1["FName"] . " " . $row1["LName"] . "</td>";
-                  echo "<td id=\"getUser\"><button data-toggle=\"collapse\" data-target=\".friend" . $x . "\" id=\"getUserBtn\" class=\"btn btn-sm btn-info\"><i class=\"glyphicon glyphicon-eye-open\"></i> View</button>
-                                            <button data-toggle=\"\" data-target=\".friendEdit" . $x . "\" id=\"editUser\" class=\"btn btn-sm btn-success\"><i class=\"glyphicon glyphicon-pencil\"></i></button></td>";
-                  echo "</tr>";
-
-
-                  echo "<tr>";
-                    echo "<td colspan=\"3\" class=\"hiddenRow\">";
-                      echo "<div id=\"hiddenContent\" class=\"collapse friend" . $x . "\">
-                              <div id=\"hiddenWrapper\">
-                                  <h1>Main Information</h1>
-                                  <table class=\"table table-bordered\">
-                                  <colgroup>
-                                     <col span=\"1\" style=\"width: 25%;\">
-                                     <col span=\"1\" style=\"width: 50%;\">
-                                  </colgroup>
-                                    <thead>
-                                      <tr>
-                                        <th>Question</th>
-                                        <th>Answer</th>
-                                      </tr>
-                                    </thead>
-                                    <tr>"
-                                  . "<td>Email:</td>" . "<td>" . $row1["Email"] . "</td>
-                                    </tr>
-                                    <tr>"
-                                  . "<td>Cell: " . "<td>" . $row1["Cell"] . "</td>
-                                    </tr>
-                                    <tr>"
-                                  . "<td>Major: " . "<td>" . $row1["Major"] . "</td>
-                                    </tr>
-                                    <tr>"
-                                  . "<td>Graduation Year: " . "<td>" . $row1["Grad_Year"] . "</td>
-                                    </tr>
-                                  </table>"
-                                  . (($row1["Is_Friend"] and $row1["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
-
-                            // This is the large data set
-                            echo "<h1>Survey Answers</h1>
-                                  <table class=\"table table-bordered\">
-                                    <colgroup>
-                                       <col span=\"1\" style=\"width: 25%;\">
-                                       <col span=\"1\" style=\"width: 50%;\">
-                                    </colgroup>
-                                    <thead>
-                                      <tr>
-                                        <th>Question</th>
-                                        <th>Answer</th>
-                                      </tr>
-                                    </thead>";
-                                    while ($row2 = mysqli_fetch_array($info)){
-                                      echo "<tr>
-                                              <td>" . $row2["Info_Type"] . "</td>
-                                              <td>" . $row2["Info_Value"] . "</td>
-                                            </tr>";
-
-                                    }
-                                  echo
-                                  "</table>
-                                </div>
-                            </div>";
-                    echo "</td>";
-                  echo "</tr>";
-                  $x++;
-
-                }
               ?>
             </table>
           </div>
