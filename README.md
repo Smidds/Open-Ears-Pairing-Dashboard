@@ -4,7 +4,7 @@ The nature of this project is to take information from Friends and Warriors alik
 
 ##### The Big TODO
 - [x] A fully structured database in MySQL
-- [ ] A Fully fleshed out user interface for the dashboard
+- [x] A Fully fleshed out user interface for the dashboard
 - [ ] A form to fill for Warriors and Friends
 - [ ] Customizable dash and form -- _This is a stretch goal_
 
@@ -22,9 +22,9 @@ This comes to the database itself, in that in it's present state I would call it
 So far the overall thought of the desire has been to keep it minimal and to imitate other well know interfaces to administrate users and information. Specifically, I'm taking inspiration from places such as CPanel and the things that pop up from a google search of admin panel
 
 ##### Dashboard TODO
-- [ ] Create flow of pages (How many, which ones, where do they go)
-- [ ] Create general look and feel of the web application as a whole
-- [ ] Integrate database to web application
+- [x] Create flow of pages (How many, which ones, where do they go)
+- [x] Create general look and feel of the web application as a whole
+- [x] Integrate database to web application
 - [ ] Manage permissions admins to access the page, perhaps a sign in
 - [ ] Search for some kind of hosting
 
