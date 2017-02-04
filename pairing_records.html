@@ -35,21 +35,27 @@ $getInfo = $db->prepare('
   INNER JOIN  info_reference as i
   ON          p.Info_ID = i.Info_ID AND p.SID = :SID');
 
-$training = $db->prepare('
- SELECT   *
+$trainingCount = $db->prepare('
+ SELECT   count(*)
  FROM     training_record
- WHERE    SID = :SID
- ORDER BY Training_Date DESC');
+ WHERE    SID = :SID');
+
+$training = $db->prepare('
+  SELECT   *
+  FROM     training_record
+  WHERE    SID = :SID
+  ORDER BY Training_Date DESC');
 
 $allPairs = $db->prepare('
   SELECT   *
   FROM     pairing_record
-  ORDER BY Date_End DESC, Date_Start DESC');
+  ORDER BY Date_End ASC, Date_Start DESC');
 
-$person = $db->prepare('
+$personInfo = $db->prepare('
   SELECT   *
   FROM     person
-  WHERE    SID = :SID')
+  WHERE    SID = :SID');
+
 $allPairs->execute();
 ?>
 
@@ -74,6 +80,7 @@ $allPairs->execute();
   </head>
   <body>
     <div class="" id="wrapper">
+      <!-- The Navbar -->
       <nav class="navbar navbar-default" role="navigation">
         <div class="container-fluid">
           <div class="navbar-header">
@@ -104,6 +111,55 @@ $allPairs->execute();
         </div><!-- /.container-fluid -->
       </nav>
 
+      <!-- The Modal -->
+      <div class="modal fade" id="removePairModal" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel" aria-hidden="true">
+        <div class="modal-dialog" role="document">
+          <div class="modal-content">
+            <div class="modal-header" style="margin-bottom:-10px;">
+              <h3 style="display:inline;" class="modal-title" id="exampleModalLabel">Delete Pair</h3>
+              <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                <span aria-hidden="true">&times;</span>
+              </button>
+            </div>
+            <div class="modal-body">
+              <div class="container-fluid" style="margin-top: 10px;">
+                <div class="row">
+                  <div class="col-xs-offset-1 col-xs-5">
+                      <h3>Friend</h3>
+                  </div>
+                  <div class=" col-xs-5">
+                      <h3>Warrior</h3>
+                  </div>
+                </div>
+                <div class="row removeRow">
+                  <div class="col-sm-offset-1 col-sm-10">
+                    <div class="boxes">
+                      <div class="box bg-danger friendRemove" id="friendRemove"></div>
+                      <div class="fix"><i class="glyphicon glyphicon-link"></i></div>
+                      <div class="bg-danger text-white  box warriorRemove" id="warriorRemove"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <!-- Turn this into some kind of variable display that looks like the table with the friend and warrior -->
+              <br><br>
+              <p>In order to complete the deletion of this pair, please state the reason in the box below, then select UNPAIR to remove the pairing, or select
+                  close/click off of this popup to close this popup</p>
+              <form>
+                <div class="form-group">
+                  <label for="message-text" class="form-control-label">Reason:</label>
+                  <textarea class="form-control" id="reasonInput"></textarea>
+                </div>
+              </form>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-dismiss="modal">Close</button>
+              <button type="button" class="btn btn-danger unpair" id="unpair"data-dismiss="modal" data-target="" data-toggle="">UNPAIR</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- Main Body of Text and Informatiom -->
       <div class="container-fluid" id="core">
         <div class="row">
@@ -123,115 +179,207 @@ $allPairs->execute();
               </thead>
               <?php
                 $x =0;
-                while ($row1 = $allPairs->fetch(PDO::FETCH_ASSOC)){
-                  // Here are all the queries neccessary to print
-                  // The SID here is to be used as a reference
+                while ($rowType1 = $allPairs->fetch(PDO::FETCH_ASSOC)){
+                  // Here are all the prepares neccessary to print
                   // You'll need to execute your PDO's with variables sent
-                  $sidF = $row1["SID_Friend"];
-                  $sidW = $row1["SID_Warrior"];
+                  //  *********************************************
 
-                  echo "<tr>";
-                  echo "<td>" . $row1["SID"] . "</td>";
-                  echo "<td>" . $row1["FName"] . " " . $row1["LName"] . "</td>";
-                  echo "<td id=\"getUser\"><button data-toggle=\"collapse\" data-target=\".friend" . $x . "\" id=\"getUserBtn\" class=\"btn btn-sm btn-info\"><i class=\"glyphicon glyphicon-eye-open\"></i> View</button>
-                                            <button data-toggle=\"\" data-target=\".friendEdit" . $x . "\" id=\"editUser\" class=\"btn btn-sm btn-success\"><i class=\"glyphicon glyphicon-pencil\"></i></button></td>";
+                  $sidF = $rowType1["SID_Friend"];
+                  $sidW = $rowType1["SID_Warrior"];
+                  $dateS = $rowType1["Date_Start"];
+                  $dateE = $rowType1["Date_End"];
+
+                  $personInfo->execute(array(':SID'=>$sidF));
+                  $person = $personInfo->fetch(PDO::FETCH_ASSOC);
+                  $bg = "danger";
+                  echo "<tr class=\"". ($dateE != null ? $bg : "") . "\">";
+                    echo "<td>" . $sidF . "</td>";
+                    echo "<td>" . $sidW . "</td>";
+                    echo "<td>" . date("d M, Y  (D)",strtotime($rowType1['Date_Start'])) . "</td>";
+                    echo "<td>" . ($dateE == null ? "--" : date("d M, Y  (D)",strtotime($rowType1['Date_End']))) . "</td>";
+                    echo "<td id=\"getUser\"><button data-toggle=\"collapse\" data-target=\".pair" . $x . "\" id=\"getPairBtn\" class=\"btn btn-sm btn-info\"><i class=\"glyphicon glyphicon-eye-open\"></i> View</button>"
+                                             . ($dateE == null ? "<button data-warrior=\"" . $sidW . "\" data-friend=\"" .$sidF . "\" data-toggle=\"modal\" data-target=\"#removePairModal\" id=\"rmvPair\" class=\"btn btn-sm btn-danger\"><i class=\"glyphicon glyphicon-trash\"></i></button></td>": "</td>");
                   echo "</tr>";
 
 
                   echo "<tr>";
-                    echo "<td colspan=\"3\" class=\"hiddenRow\">";
-                      echo "<div id=\"hiddenContent\" class=\"collapse friend" . $x . "\">
-                              <div id=\"hiddenWrapper\">
-                                  <h1>Main Information</h1>
-                                  <table class=\"table table-bordered\">
-                                  <colgroup>
-                                     <col span=\"1\" style=\"width: 25%;\">
-                                     <col span=\"1\" style=\"width: 50%;\">
-                                  </colgroup>
-                                    <thead>
-                                      <tr>
-                                        <th>Question</th>
-                                        <th>Answer</th>
+                    echo "<td colspan=\"5\" class=\"hiddenRow\">";
+                      echo "<div id=\"hiddenContent\" class=\"collapse pair" . $x . "\">";
+                        echo "<div id=\"hiddenWrapper\">";
+                          // This is the reason why the pairing was discontinued
+                          if($dateE != null){
+                            echo "<div class=\"row\">";
+                              echo "<div class=\"col-sm-offset-1 col-sm-10 endReason\">";
+                                echo "<table class=\"table table-bordered\">";
+                                  echo "<thead>";
+                                    echo "<tr class=\"". ($dateE != null ? $bg : "") . "\">";
+                                      echo "<th><h2><mark>Reason for Discontinuation:</mark></h2></th>";
+                                    echo "</tr>";
+                                  echo "</thead>";
+                                  echo "<tr>";
+                                    echo "<td><h4>" . $rowType1["End_Reason"] . "</h4></td>";
+                                  echo "</tr>";
+                                echo "</table>";
+                              echo "</div>";
+                            echo "</div>";
+                          }
+                          // This is the major content to be displayed
+                          echo "<div class=\"row\">";
+                            // Here we're at the Friends tables
+                            echo "<div class=\"col-sm-offset-1 col-sm-10 col-md-offset-1 col-md-5\">
+                                    <h1>The Friend - " . $person["FName"] . " " . $person["LName"] . "</h1>";
+                              // This is the source of main information
+                              echo "<h2>Main Information</h2>
+                                    <table class=\"table table-bordered\">
+                                      <colgroup>
+                                         <col span=\"1\" style=\"width: 25%;\">
+                                         <col span=\"1\" style=\"width: 50%;\">
+                                      </colgroup>
+                                        <thead>
+                                          <tr>
+                                            <th>Question</th>
+                                            <th>Answer</th>
+                                          </tr>
+                                        </thead>
+                                        <tr>"
+                                      . "<td>Email:</td>" . "<td>" . $person["Email"] . "</td>
+                                        </tr>
+                                        <tr>"
+                                      . "<td>Cell: " . "<td>" . $person["Cell"] . "</td>
+                                        </tr>
+                                        <tr>"
+                                      . "<td>Major: " . "<td>" . $person["Major"] . "</td>
+                                        </tr>
+                                        <tr>"
+                                      . "<td>Graduation Year: " . "<td>" . $person["Grad_Year"] . "</td>
+                                        </tr>
+                                    </table>"
+
+                                . (($person["Is_Friend"] & $person["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
+
+
+
+                              // This is the large data set
+                              echo "<h2>Survey Answers</h2>";
+                                $getInfo->execute(array(':SID' => $sidF));
+                                echo "<table class=\"table table-bordered\">
+                                      <colgroup>
+                                         <col span=\"1\" style=\"width: 25%;\">
+                                         <col span=\"1\" style=\"width: 50%;\">
+                                      </colgroup>
+                                      <thead>
+                                        <tr>
+                                          <th>Question</th>
+                                          <th>Answer</th>
+                                        </tr>
+                                      </thead>";
+                                      while ($rowType2 = $getInfo->fetch(PDO::FETCH_ASSOC)){
+                                        echo "<tr>
+                                                <td>" . $rowType2["Info_Type"] . "</td>
+                                                <td>" . $rowType2["Info_Value"] . "</td>
+                                              </tr>";
+
+                                      }
+                              echo "</table>";
+
+                              // This is the training data set
+                              echo "<h2>Training Record</h2>";
+                                $trainingCount->execute(array(':SID' => $sidF));
+                                $training->execute(array(':SID' => $sidF));
+                                $row_cnt = $trainingCount->fetchColumn();
+                                echo "<table class=\"table table-bordered\">
+                                      <colgroup>
+                                         <col span=\"1\" style=\"width: 2%;\">
+                                         <col span=\"1\" style=\"width: 50%;\">
+                                      </colgroup>
+                                      <thead>
+                                        <tr>
+                                          <th style=\"width:50px;\">Number</th>
+                                          <th>Date</th>
+                                        </tr>
+                                      </thead>";
+                                      $y = 1;
+                                      while ($rowType3 = $training->fetch(PDO::FETCH_ASSOC)){
+                                        echo "<tr>
+                                                <td style=\"text-align:center;\">" . $y . "</td>
+                                                <td>" . $rowType3["Training_Date"] . "</td>
+                                              </tr>";
+                                        $y++;
+                                      }
+                                echo "</table>";
+                                unset($rowType2);unset($rowType3);unset($person);
+                            echo "</div>";
+
+                            // Here we're at the Warriors tables
+                            echo "<div class=\"col-sm-offset-1 col-sm-10 col-md-offset-0 col-md-5\">";
+                                $personInfo->execute(array(':SID' => $sidW));
+                                $person = $personInfo->fetch(PDO::FETCH_ASSOC);
+                              echo "<h1>The Warrior - " . $person["FName"] . " " . $person["LName"] . "</h1>";
+                                // This is the main information set
+                              echo "<h2>Main Information</h2>
+                                    <table class=\"table table-bordered\">
+                                      <colgroup>
+                                         <col span=\"1\" style=\"width: 25%;\">
+                                         <col span=\"1\" style=\"width: 50%;\">
+                                      </colgroup>
+                                      <thead>
+                                        <tr>
+                                          <th>Question</th>
+                                          <th>Answer</th>
+                                        </tr>
+                                      </thead>
+                                      <tr>"
+                                      . "<td>Email:</td>"
+                                      . "<td>" . $person["Email"] . "</td>
                                       </tr>
-                                    </thead>
-                                    <tr>"
-                                  . "<td>Email:</td>" . "<td>" . $row1["Email"] . "</td>
-                                    </tr>
-                                    <tr>"
-                                  . "<td>Cell: " . "<td>" . $row1["Cell"] . "</td>
-                                    </tr>
-                                    <tr>"
-                                  . "<td>Major: " . "<td>" . $row1["Major"] . "</td>
-                                    </tr>
-                                    <tr>"
-                                  . "<td>Graduation Year: " . "<td>" . $row1["Grad_Year"] . "</td>
-                                    </tr>
-                                  </table>"
-                                  . (($row1["Is_Friend"] and $row1["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
-
-                            // This is the large data set
-                            echo "<h1>Survey Answers</h1>
-                                  <table class=\"table table-bordered\">
-                                    <colgroup>
-                                       <col span=\"1\" style=\"width: 25%;\">
-                                       <col span=\"1\" style=\"width: 50%;\">
-                                    </colgroup>
-                                    <thead>
-                                      <tr>
-                                        <th>Question</th>
-                                        <th>Answer</th>
+                                      <tr>"
+                                      . "<td>Cell:</td>"
+                                      . "<td>" . $person["Cell"] . "</td>
                                       </tr>
-                                    </thead>";
-                                    while ($row2 = mysqli_fetch_array($info)){
-                                      echo "<tr>
-                                              <td>" . $row2["Info_Type"] . "</td>
-                                              <td>" . $row2["Info_Value"] . "</td>
-                                            </tr>";
+                                      <tr>"
+                                      . "<td>Major:</td>"
+                                      . "<td>" . $person["Major"] . "</td>
+                                      </tr>
+                                      <tr>"
+                                      . "<td>Graduation Year:</td>"
+                                      . "<td>" . $person["Grad_Year"] . "</td>
+                                      </tr>
+                                    </table>"
+                                  . (($person["Is_Friend"] and $person["Is_Warrior"]) ? "<p><mark>User is a Friend and a Warrior</mark></p>" : "");
 
-                                    }
-                                  echo
-                                  "</table>";
+                                // This is the large data set getInfo
+                              echo "<h2>Survey Answers</h2>
+                                    <table class=\"table table-bordered\">
+                                      <colgroup>
+                                         <col span=\"1\" style=\"width: 25%;\">
+                                         <col span=\"1\" style=\"width: 50%;\">
+                                      </colgroup>
+                                      <thead>
+                                        <tr>
+                                          <th>Question</th>
+                                          <th>Answer</th>
+                                        </tr>
+                                      </thead>";
+                                      $getInfo->execute(array(':SID' => $sidW));
+                                      while ($rowType2 = $getInfo->fetch(PDO::FETCH_ASSOC)){
+                                        echo "<tr>
+                                                <td>" . $rowType2["Info_Type"] . "</td>
+                                                <td>" . $rowType2["Info_Value"] . "</td>
+                                              </tr>";
+                                      }
+                                      // Line 271, line 240
+                                echo "</table>";
 
-                            // This is the training data set
-                            echo "<span id=\"dividerHeader\">Training Record</span>";
-                            $row_cnt = mysqli_num_rows($training);
-                            if($row_cnt >= 2){
-                              echo "<span id=\"dividerHeader\"> - </span><span id=\"trainingStatus\" class=\"bg-success\">Trained <i class=\"glyphicon glyphicon-ok\"></i></span>";
-                            }
-                            else{
-                              echo "<span id=\"dividerHeader\"> - </span><span id=\"trainingStatus\" class=\"bg-danger\">Not Trained <i class=\"glyphicon glyphicon-remove\"></i></span>";
-                            }
-                            echo "<table class=\"table table-bordered\">
-                                  <colgroup>
-                                     <col span=\"1\" style=\"width: 2%;\">
-                                     <col span=\"1\" style=\"width: 50%;\">
-                                  </colgroup>
-                                  <thead>
-                                    <tr>
-                                      <th style=\"width:50px;\">Number</th>
-                                      <th>Date</th>
-                                    </tr>
-                                  </thead>";
-                                  $y = 1;
-                                  while ($row3 = mysqli_fetch_array($training)){
-                                    echo "<tr>
-                                            <td style=\"text-align:center;\">" . $y . "
-                                            <td>" . $row3["Training_Date"] . "</td>
-                                          </tr>";
-                                    $y++;
-                                  }
-                                echo
-                                "</table>";
+                          echo "</div>";
+                        echo "</div>";
+                      echo "</div>";
+                    echo "</td>";
+                  echo "</tr>";
 
-                                echo "</div>
-                            </div>
-                        </td>
-                    </tr>";
-                  $x++;
-                  unset($sid);
-                }
-                unset($row1);unset($row2);unset($row3);
-              ?>
+                $x++;
+                unset($rowType1);unset($rowType2);unset($rowType3);
+              }
+            ?>
             </table>
           </div>
         </div>

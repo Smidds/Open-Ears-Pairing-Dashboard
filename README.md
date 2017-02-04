@@ -30,11 +30,12 @@ So far the overall thought of the desire has been to keep it minimal and to imit
 
 ##### Pages TODO
 - [ ] Home Page
-- [ ] Users Page
+- [x] Users Page
 - [ ] Pairing Page
-- [ ] Pairing History Page
+- [x] Pairing History Page
 - [ ] Settings Page
 
+- [ ]Side note - I need to fix all the MySQL calls to be done with PDO, not MySQLi
 #### Users Page DEMO
 ![Users Page Screenshot](https://github.com/Smidds/Open-Ears-Pairing-Dashboard/blob/master/assets/usersPage.gif)
 

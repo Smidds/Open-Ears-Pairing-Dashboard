@@ -32,6 +32,35 @@ if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
     echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
 }
 
+try {
+  $db = new PDO('mysql:host=' . $hostname . ';dbname=' . $databaseName . '', $username, $password);
+} catch (PDOException $e) {
+    echo 'Connection failed: ' . $e->getMessage();
+}
+
+/*
+ // This is the training list in the table
+ if (!$training = $mysqli->query("SELECT * FROM training_record WHERE SID=\"" . $sid . "\"")) {
+     echo "Query Failed!: (" . $mysqli->errno . ") ". $mysqli->error;
+ }
+ */
+$getInfo = $db->prepare('
+  SELECT      *
+  FROM        person_info as p
+  INNER JOIN  info_reference as i
+  ON          p.Info_ID = i.Info_ID AND p.SID = :SID');
+
+$thePairs = $db->prepare('
+  SELECT   *
+  FROM     pairing_record
+  WHERE    SID_Warrior = :SID OR SID_Friend = :SID
+  ORDER BY Date_End ASC, Date_Start DESC');
+
+$personInfo = $db->prepare('
+  SELECT   *
+  FROM     person
+  WHERE    SID = :SID');
+
 ?>
 
 <!DOCTYPE html>
@@ -175,6 +204,46 @@ if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
                                   echo
                                   "</table>";
 
+                            // This is the pairs data set
+                            echo "<h1>Pairs</h1>
+                                  <table class=\"table table-bordered\">
+                                    <colgroup>
+                                       <col span=\"1\" style=\"width:;\">
+                                       <col span=\"1\" style=\"width:;\">
+                                    </colgroup>
+                                    <thead>
+                                      <tr>
+                                        <th>Friend</th>
+                                        <th>Warrior</th>
+                                        <th>Date Start</th>
+                                        <th>Date End</th>
+                                      </tr>
+                                    </thead>";
+                                    $thePairs->execute(array(':SID' => $sid));
+                                    while ($rowType1 = $thePairs->fetch(PDO::FETCH_ASSOC)){
+
+                                      // Here are all the prepares neccessary to print
+                                      // You'll need to execute your PDO's with variables sent
+                                      //  *********************************************
+
+                                      $sidF = $rowType1["SID_Friend"];
+                                      $sidW = $rowType1["SID_Warrior"];
+                                      $dateS = $rowType1["Date_Start"];
+                                      $dateE = $rowType1["Date_End"];
+
+                                      $bg = "danger";
+
+                                      echo "<tr class=\"". ($dateE != null ? $bg : "") . "\">";
+                                      echo "<td>" . ($sidF == $sid ? ("<mark>" . $sidF . "</mark>") : $sidF) . "</td>";
+                                      echo "<td>" . ($sidW == $sid ? ("<mark>" . $sidW . "</mark>") : $sidW) . "</td>";
+                                        echo "<td>" . date("d M, Y  (D)",strtotime($rowType1['Date_Start'])) . "</td>";
+                                        echo "<td>" . ($dateE == null ? "--" : date("d M, Y  (D)",strtotime($rowType1['Date_End']))) . "</td>";
+                                      echo "</tr>";
+                                    }
+                                  echo
+                                  "</table>";
+
+
                             // This is the training data set
                             echo "<span id=\"dividerHeader\">Training Record</span>";
                             $row_cnt = mysqli_num_rows($training);
@@ -294,6 +363,45 @@ if (!$pairing = $mysqli->query("SELECT * FROM pairing_record")) {
                                               <td>" . $row2["Info_Value"] . "</td>
                                             </tr>";
 
+                                    }
+                                  echo
+                                  "</table>";
+
+                            // This is the pairs data set
+                            echo "<h1>Pairs</h1>
+                                  <table class=\"table table-bordered\">
+                                    <colgroup>
+                                       <col span=\"1\" style=\"width:;\">
+                                       <col span=\"1\" style=\"width:;\">
+                                    </colgroup>
+                                    <thead>
+                                      <tr>
+                                        <th>Friend</th>
+                                        <th>Warrior</th>
+                                        <th>Date Start</th>
+                                        <th>Date End</th>
+                                      </tr>
+                                    </thead>";
+                                    $thePairs->execute(array(':SID' => $sid));
+                                    while ($rowType1 = $thePairs->fetch(PDO::FETCH_ASSOC)){
+
+                                      // Here are all the prepares neccessary to print
+                                      // You'll need to execute your PDO's with variables sent
+                                      //  *********************************************
+
+                                      $sidF = $rowType1["SID_Friend"];
+                                      $sidW = $rowType1["SID_Warrior"];
+                                      $dateS = $rowType1["Date_Start"];
+                                      $dateE = $rowType1["Date_End"];
+
+                                      $bg = "danger";
+
+                                      echo "<tr class=\"". ($dateE != null ? $bg : "") . "\">";
+                                        echo "<td>" . ($sidF == $sid ? ("<mark>" . $sidF . "</mark>") : $sidF) . "</td>";
+                                        echo "<td>" . ($sidW == $sid ? ("<mark>" . $sidW . "</mark>") : $sidW) . "</td>";
+                                        echo "<td>" . date("d M, Y  (D)",strtotime($rowType1['Date_Start'])) . "</td>";
+                                        echo "<td>" . ($dateE == null ? "--" : date("d M, Y  (D)",strtotime($rowType1['Date_End']))) . "</td>";
+                                      echo "</tr>";
                                     }
                                   echo
                                   "</table>
